@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J.A.R.V.I.S. HUD</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body>
+    <div class="hud-bg"></div>
+    <div class="hex-grid"></div>
+    <div class="scanline"></div>
+
+    <!-- Top Status Bar -->
+    <div class="top-bar">
+        <span id="system-status">SYSTEM: OPTIMAL</span>
+        <span>ENCRYPTION: AES-256</span>
+        <span>MIC: <span id="mic-status" class="active">ACTIVE</span></span>
+        <span id="uptime-top">UPTIME: 00:00:00</span>
+    </div>
+
+    <!-- HUD Corners -->
+    <div class="corner tl"></div>
+    <div class="corner tr"></div>
+    <div class="corner bl"></div>
+    <div class="corner br"></div>
+
+    <main class="hud-main">
+        <!-- Sidebar Left -->
+        <aside class="sidebar sidebar-left" id="sidebar-left">
+            <div class="module-card weather-module-mini" id="module-weather">
+                <div class="module-title">WEATHER SENSORS <span>◈</span></div>
+                <div class="module-content">
+                    <div id="weather-map" class="map-view-mini"></div>
+                    <div id="weather-temp-large" style="font-size: 20px; font-weight: bold; margin-top: 5px;">--°C</div>
+                    <div id="weather-details" style="font-size: 10px; opacity: 0.7;">SCANNING...</div>
+                </div>
+            </div>
+            <div class="module-card" id="module-cpu">
+                <div class="module-title"><span>◈</span> CPU PERFORMANCE</div>
+                <div class="module-content">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div id="cpu-load">LOAD: 0%</div>
+                        <div id="sys-temp" style="color: var(--cyan); font-size: 10px; font-weight: bold;">TEMP: --°C</div>
+                    </div>
+                    <div class="telemetry-bar"><div id="cpu-bar" class="telemetry-fill"></div></div>
+                </div>
+            </div>
+            <div class="module-card" id="module-gpu">
+                <div class="module-title"><span>◈</span> GPU UTILIZATION</div>
+                <div class="module-content">
+                    <div id="gpu-load">GPU: 0%</div>
+                    <div class="telemetry-bar"><div id="gpu-bar" class="telemetry-fill"></div></div>
+                </div>
+            </div>
+            <div class="module-card network-module-mini" id="module-network">
+                <div class="module-title">NETWORK ACTIVITY <span>◈</span></div>
+                <div class="module-content">
+                    <canvas id="network-map" style="height: 100px; width: 100%;"></canvas>
+                    <div id="net-ping-display" style="font-size: 10px; text-align: center; margin-top: 5px;">PING: --ms</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Sidebar Right -->
+        <aside class="sidebar sidebar-right" id="sidebar-right">
+            <div class="module-card" id="module-memory">
+                <div class="module-title">MEMORY STATUS <span>◈</span></div>
+                <div class="module-content">
+                    <div id="ram-usage">RAM: 0%</div>
+                    <div class="telemetry-bar"><div id="ram-bar" class="telemetry-fill"></div></div>
+                </div>
+            </div>
+            <div class="module-card chat-module" id="module-chat">
+                <div class="module-title">DIALOGUE CHAT <span>◈</span></div>
+                <div class="module-content">
+                    <div id="dialogue-log" class="dialogue-scroll">
+                        <div class="dialogue-entry">[JARVIS]: Online.</div>
+                    </div>
+                    <div class="chat-input-container">
+                        <input type="text" id="chat-input" placeholder="COMMAND..." autocomplete="off">
+                    </div>
+                </div>
+            </div>
+            <div class="module-card" id="module-volume">
+                <div class="module-title">VOICE VOLUME <span>◈</span></div>
+                <div class="module-content">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 12px;">0%</span>
+                        <input type="range" id="voice-volume-slider" min="0" max="1" step="0.1" value="1" style="flex: 1; cursor: pointer; accent-color: var(--cyan);">
+                        <span style="font-size: 12px;">100%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="module-card" id="module-session">
+                <div class="module-title">SESSION INFO <span>◈</span></div>
+                <div class="module-content">
+                    <div id="main-clock" class="large-clock" style="font-size: 24px; font-weight: bold;">00:00:00</div>
+                    <div id="current-date" style="font-size: 9px; opacity: 0.6; margin-top: 5px;">LOADING...</div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Central Core -->
+    <div class="core-display" id="core-display">
+        <div class="ring-container">
+            <div class="ring ring-outer"></div>
+            <div class="ring ring-mid"></div>
+            <div class="ring ring-inner"></div>
+            <div class="orb">
+                <h1>JARVIS</h1>
+            </div>
+        </div>
+        <div class="voice-wave" id="voice-wave">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+        </div>
+    </div>
+
+    <!-- Voice Control -->
+    <button id="mute-btn" class="mute-button">
+        🎙️
+    </button>
+
+    <!-- Map Window (Full Screen) -->
+    <div id="map-container" class="map-container">
+        <!-- Tactical HUD Overlay -->
+        <div class="map-ui-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; pointer-events: none; border: 1px solid rgba(0, 242, 255, 0.3);">
+            <!-- Corner Brackets -->
+            <div class="map-corner tl" style="position: absolute; top: 10px; left: 10px; width: 40px; height: 40px; border-left: 2px solid var(--cyan); border-top: 2px solid var(--cyan);"></div>
+            <div class="map-corner tr" style="position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; border-right: 2px solid var(--cyan); border-top: 2px solid var(--cyan);"></div>
+            <div class="map-corner bl" style="position: absolute; bottom: 10px; left: 10px; width: 40px; height: 40px; border-left: 2px solid var(--cyan); border-bottom: 2px solid var(--cyan);"></div>
+            <div class="map-corner br" style="position: absolute; bottom: 10px; right: 10px; width: 40px; height: 40px; border-right: 2px solid var(--cyan); border-bottom: 2px solid var(--cyan);"></div>
+            
+            <!-- Side Info Panel -->
+            <div id="map-info-panel" style="position: absolute; top: 60px; right: 20px; width: 200px; background: rgba(0, 20, 30, 0.7); border-left: 3px solid var(--cyan); padding: 15px; color: var(--cyan); font-family: 'Orbitron', sans-serif; backdrop-filter: blur(5px);">
+                <div style="font-size: 8px; opacity: 0.6; margin-bottom: 5px;">TARGET DESIGNATION</div>
+                <div id="target-city" style="font-size: 14px; font-weight: bold; margin-bottom: 15px;">SCANNING...</div>
+                <div style="font-size: 8px; opacity: 0.6; margin-bottom: 5px;">COORDINATES</div>
+                <div id="target-coords" style="font-size: 10px; margin-bottom: 15px;">LAT: --.----<br>LON: --.----</div>
+                <div id="scan-status" style="font-size: 9px; color: #0f0;">STATUS: ENCRYPTED</div>
+            </div>
+        </div>
+
+        <div class="map-header" style="position: absolute; top: 0; left: 0; width: 100%; height: 40px; background: rgba(0, 20, 30, 0.9); display: flex; justify-content: space-between; align-items: center; padding: 0 15px; border-bottom: 1px solid rgba(0, 242, 255, 0.3); z-index: 1000; font-family: 'Orbitron', sans-serif;">
+            <span style="color: var(--cyan); font-size: 10px; letter-spacing: 3px;">TACTICAL SATELLITE INTERFACE</span>
+            <button id="close-map" style="background: rgba(0, 242, 255, 0.1); border: 1px solid var(--cyan); color: var(--cyan); width: 30px; height: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px;">✕</button>
+        </div>
+
+        <div id="globe-3d" style="position: absolute; bottom: 30px; left: 30px; width: 200px; height: 200px; z-index: 100; pointer-events: none; opacity: 0.6;"></div>
+        
+        <!-- Clipped Map Frame to hide Google UI -->
+        <div class="map-clipping-mask" style="position: absolute; top: 40px; left: 0; width: 100%; height: calc(100% - 40px); overflow: hidden; background: #000;">
+            <iframe id="map-frame" src="" frameborder="0" allowfullscreen style="width: 120%; height: 120%; margin-top: -5%; margin-left: -10%; filter: hue-rotate(180deg) invert(0.9) contrast(1.2) brightness(0.8); pointer-events: all; position: relative; z-index: 5;"></iframe>
+        </div>
+    </div>
+
+    <!-- Notification Center -->
+    <div id="notification-center" class="notification-center"></div>
+
+    <!-- Global News Ticker -->
+    <div class="news-ticker-container">
+        <div class="ticker-label">GLOBAL INTELLIGENCE FEED</div>
+        <div class="ticker-wrap">
+            <div id="news-ticker" class="ticker-content">
+                CONNECTING TO GLOBAL NEWS NETWORK...
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="main.js"></script>
+
+
+</body>
+</html>

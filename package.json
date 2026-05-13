@@ -1,0 +1,31 @@
+{
+  "name": "jarvis_v1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "dev": "concurrently \"vite\" \"npx nodemon server.js\"",
+    "server": "node server.js",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "vite": "^8.0.12"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "axios": "^1.16.0",
+    "cheerio": "^1.2.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "googleapis": "^171.4.0",
+    "systeminformation": "^5.31.6",
+    "three": "^0.184.0"
+  }
+}
