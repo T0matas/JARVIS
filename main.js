@@ -141,10 +141,17 @@ function updateClock() {
     const dateEl  = document.getElementById('current-date');
     if (!clockEl) return;
     const now = new Date();
-    clockEl.textContent = now.toLocaleTimeString('en-GB', { hour12: false });
+    const timeStr = now.toLocaleTimeString('en-GB', { hour12: false });
+    clockEl.textContent = timeStr;
+    const idleClock = document.getElementById('idle-clock');
+    if (idleClock) idleClock.textContent = timeStr;
+
     if (dateEl) {
         const locale = currentLang === 'pt' ? 'pt-BR' : 'en-US';
-        dateEl.textContent = now.toLocaleDateString(locale, { weekday:'long', day:'numeric', month:'long', year:'numeric' }).toUpperCase();
+        const dateStr = now.toLocaleDateString(locale, { weekday:'long', day:'numeric', month:'long', year:'numeric' }).toUpperCase();
+        dateEl.textContent = dateStr;
+        const idleDate = document.getElementById('idle-date');
+        if (idleDate) idleDate.textContent = dateStr;
     }
 }
 
@@ -412,6 +419,12 @@ async function updateTelemetry() {
         if (ramBar) ramBar.style.width = `${d.memory}%`;
         if (ramUsage) ramUsage.textContent = `MEM: ${d.memory}%`;
         
+        // Idle updates
+        const idleCpu = document.getElementById('idle-cpu-val');
+        if (idleCpu) idleCpu.textContent = `${Math.round(d.cpu)}%`;
+        const idleMem = document.getElementById('idle-mem-val');
+        if (idleMem) idleMem.textContent = `${d.memory}%`;
+        
         const taskCount = document.getElementById('task-count');
         if (taskCount) taskCount.textContent = `TASKS: ${d.processes}`;
         
@@ -481,6 +494,12 @@ async function updateWeatherInfo(lat, lon) {
         const cw = d.current_weather;
         document.getElementById('weather-temp-large').textContent = `${Math.round(cw.temperature)}°C`;
         document.getElementById('weather-details').textContent = weatherDesc(cw.weathercode).toUpperCase() + `\n WIND: ${cw.windspeed}KM/H`;
+        
+        // Idle updates
+        const idleTemp = document.getElementById('idle-temp');
+        if (idleTemp) idleTemp.textContent = `${Math.round(cw.temperature)}°C`;
+        const idleDesc = document.getElementById('idle-weather-desc');
+        if (idleDesc) idleDesc.textContent = weatherDesc(cw.weathercode).toUpperCase();
     } catch(e){}
 }
 
@@ -609,29 +628,10 @@ function animateVisualizer() {
     const orb = document.querySelector('.orb');
     const voiceWaves = document.getElementById('voice-wave');
 
-    if (ringOuter) {
-        const s = 1 + bass * 0.15;
-        ringOuter.style.setProperty('--s', s);
-        ringOuter.style.borderColor = `rgba(0, 242, 255, ${0.1 + bass * 0.5})`;
-    }
-    
-    if (ringMid) {
-        const s = 1 + mid * 0.2;
-        ringMid.style.setProperty('--s', s);
-        ringMid.style.borderColor = `rgba(0, 242, 255, ${0.3 + mid * 0.5})`;
-    }
-    
-    if (ringInner) {
-        const s = 1 + treble * 0.25;
-        ringInner.style.setProperty('--s', s);
-        ringInner.style.opacity = 0.5 + treble * 0.5;
-    }
-
-    if (orb) {
-        const glow = 20 + bass * 60;
-        orb.style.boxShadow = `0 0 ${glow}px var(--cyan-glow), inset 0 0 30px var(--cyan)`;
-        orb.style.transform = `scale(${1 + bass * 0.05})`;
-    }
+    if (ringOuter) ringOuter.style.setProperty('--s', 1 + bass * 0.15);
+    if (ringMid) ringMid.style.setProperty('--s', 1 + mid * 0.2);
+    if (ringInner) ringInner.style.setProperty('--s', 1 + treble * 0.25);
+    if (orb) orb.style.setProperty('--s', 1 + bass * 0.1);
 
     // Also update the small voice waves at the bottom of the core
     if (voiceWaves && document.body.classList.contains('speaking-active')) {
@@ -676,6 +676,7 @@ function loadVoices() {
 synthesis.onvoiceschanged = loadVoices;
 
 function speak(text) {
+    if (document.body.classList.contains('sleep-mode')) return;
     synthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     
@@ -720,6 +721,12 @@ async function handleVoiceCommand(text) {
     t = t.trim();
 
     if (!t) return;
+    
+    // Check for Sleep Mode blocking
+    const isWakeUp = /wake up|acordar|acorde|activar sistemas|ativar sistemas/.test(t);
+    if (document.body.classList.contains('sleep-mode') && !isWakeUp) {
+        return; 
+    }
     
     logDialogue('USER', t);
     if (/mute|mutar|mudo|silence|quiet|meet me|stop listening|desativar microfone/.test(t)) {
@@ -813,11 +820,26 @@ async function handleVoiceCommand(text) {
     // ─── CRITICAL UI COMMANDS (TOP PRIORITY) ───
     if (/wake up|acordar|acorde|activar sistemas|ativar sistemas/.test(t)) {
         document.body.classList.remove('sleep-mode');
+        // Visual boot-up sequence
+        document.body.classList.add('booting-up');
+        setTimeout(() => document.body.classList.remove('booting-up'), 800);
+
+        // Update status labels
+        const sysStatus = document.getElementById('system-status');
+        if (sysStatus) sysStatus.textContent = 'SYSTEM: OPTIMAL';
+        const idleStatus = document.querySelector('.idle-status');
+        if (idleStatus) idleStatus.textContent = 'SYSTEM ONLINE';
+        
         speak(currentLang === 'pt' ? "Sistemas ativados, senhor. Todos os módulos online." : "Systems activated, sir. All modules online.");
         return;
     }
     if (/go to sleep|dormir|desativar módulos|limpar interface/.test(t)) {
         document.body.classList.add('sleep-mode');
+        const sysStatus = document.getElementById('system-status');
+        if (sysStatus) sysStatus.textContent = 'SYSTEM: SLEEP MODE';
+        const idleStatus = document.querySelector('.idle-status');
+        if (idleStatus) idleStatus.textContent = 'SECURITY MONITORING ACTIVE';
+
         speak(currentLang === 'pt' ? "Entrando em modo de espera, senhor." : "Entering sleep mode, sir.");
         return;
     }
@@ -1203,6 +1225,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(checkNotifications, 15000); // Check every 15s
     fetchNewsTicker();
     setInterval(fetchNewsTicker, 900000); // Update ticker every 15 mins (feeds refresh ~hourly)
+
 
     document.getElementById('mute-btn').onclick = toggleMic;
     document.getElementById('close-map').onclick = () => {

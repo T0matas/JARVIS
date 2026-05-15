@@ -10,8 +10,31 @@
 </head>
 <body>
     <div class="hud-bg"></div>
-    <div class="hex-grid"></div>
+    <div class="plus-grid"></div>
     <div class="scanline"></div>
+    <div class="vignette"></div>
+    <div class="digital-noise"></div>
+
+    <!-- Idle Mode Elements -->
+    <div class="idle-hud-overlay">
+        <div class="idle-status">SYSTEM STATUS: SLEEP MODE</div>
+        
+        <!-- Useful Info in Corners -->
+        <div class="idle-clock-container">
+            <div id="idle-clock">00:00:00</div>
+            <div id="idle-date">THURSDAY, MAY 14, 2026</div>
+        </div>
+        
+        <div class="idle-weather-container">
+            <div id="idle-temp">--°C</div>
+            <div id="idle-weather-desc">SCANNING...</div>
+        </div>
+
+        <div class="idle-resources">
+            <div class="idle-res-item">CPU <span id="idle-cpu-val">0%</span></div>
+            <div class="idle-res-item">MEM <span id="idle-mem-val">0%</span></div>
+        </div>
+    </div>
 
     <!-- Top Status Bar -->
     <div class="top-bar">
@@ -107,6 +130,11 @@
     <!-- Central Core -->
     <div class="core-display" id="core-display">
         <div class="ring-container">
+            <div class="scanner-rings">
+                <div class="s-ring sr-1"></div>
+                <div class="s-ring sr-2"></div>
+                <div class="s-ring sr-3"></div>
+            </div>
             <div class="ring ring-outer"></div>
             <div class="ring ring-mid"></div>
             <div class="ring ring-inner"></div>
@@ -128,6 +156,9 @@
 
     <!-- Map Window (Full Screen) -->
     <div id="map-container" class="map-container">
+        <div class="map-grid-overlay"></div>
+        <div class="map-scan-line"></div>
+        <div class="map-vignette"></div>
         <!-- Tactical HUD Overlay -->
         <div class="map-ui-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; pointer-events: none; border: 1px solid rgba(0, 242, 255, 0.3);">
             <!-- Corner Brackets -->
@@ -137,12 +168,12 @@
             <div class="map-corner br" style="position: absolute; bottom: 10px; right: 10px; width: 40px; height: 40px; border-right: 2px solid var(--cyan); border-bottom: 2px solid var(--cyan);"></div>
             
             <!-- Side Info Panel -->
-            <div id="map-info-panel" style="position: absolute; top: 60px; right: 20px; width: 200px; background: rgba(0, 20, 30, 0.7); border-left: 3px solid var(--cyan); padding: 15px; color: var(--cyan); font-family: 'Orbitron', sans-serif; backdrop-filter: blur(5px);">
+            <div id="map-info-panel" style="position: absolute; top: 60px; right: 20px; width: 200px; background: rgba(0, 20, 30, 0.7); border-left: 3px solid var(--cyan); padding: 15px; color: var(--cyan); font-family: 'Orbitron', sans-serif; backdrop-filter: blur(5px); box-shadow: 0 0 20px rgba(0, 242, 255, 0.1);">
                 <div style="font-size: 8px; opacity: 0.6; margin-bottom: 5px;">TARGET DESIGNATION</div>
-                <div id="target-city" style="font-size: 14px; font-weight: bold; margin-bottom: 15px;">SCANNING...</div>
+                <div id="target-city" style="font-size: 14px; font-weight: bold; margin-bottom: 15px; text-shadow: 0 0 10px var(--cyan);">SCANNING...</div>
                 <div style="font-size: 8px; opacity: 0.6; margin-bottom: 5px;">COORDINATES</div>
-                <div id="target-coords" style="font-size: 10px; margin-bottom: 15px;">LAT: --.----<br>LON: --.----</div>
-                <div id="scan-status" style="font-size: 9px; color: #0f0;">STATUS: ENCRYPTED</div>
+                <div id="target-coords" style="font-size: 10px; margin-bottom: 15px; font-family: monospace; animation: pulse-text 1.5s infinite;">LAT: --.----<br>LON: --.----</div>
+                <div id="scan-status" style="font-size: 9px; color: #0f0; text-shadow: 0 0 5px #0f0;">STATUS: ENCRYPTED</div>
             </div>
         </div>
 

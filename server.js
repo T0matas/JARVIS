@@ -498,14 +498,15 @@ app.post('/api/ask', async (req, res) => {
                 : "You are J.A.R.V.I.S., a sophisticated British AI assistant. Answer concisely, politely, and always address the user as 'sir'. Do not use emojis.";
 
             const ollamaRes = await axios.post('http://127.0.0.1:11434/api/generate', {
-                model: 'llama3', // ou 'mistral'
+                model: 'llama3.2:1b', 
                 prompt: `${systemPrompt}\n\nUser: ${query}\nAssistant:`,
                 stream: false,
                 options: {
-                    num_predict: 150, // Mantém respostas curtas para o HUD
-                    temperature: 0.7
+                    num_predict: 100, // Slightly shorter for even faster response
+                    temperature: 0.6,
+                    num_thread: 8 // Adjust based on your CPU cores
                 }
-            }, { timeout: 12000 });
+            }, { timeout: 10000 });
 
             if (ollamaRes.data && ollamaRes.data.response) {
                 console.log(`[BRAIN] Ollama Hit`);
